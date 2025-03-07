@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Love Heart Particle Animation</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background Canvas for Flowing Data -->
+<canvas id="background"></canvas>
+
+<!-- Three.js Canvas for 3D Rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+  // 1. Set up the Canvas for flowing background
+  const backgroundCanvas = document.getElementById('background');
+  const ctx = backgroundCanvas.getContext('2d');
+  backgroundCanvas.width = window.innerWidth;
+  backgroundCanvas.height = window.innerHeight;
+
+  let data = [];
+
+  // Function to generate flowing data
+  function generateData() {
+    ctx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+
+    ctx.fillStyle = 'rgba(0, 255, 255, 1)';
+    ctx.font = '20px Arial';
+    ctx.fillText('Dynamic Data Flow', Math.random() * backgroundCanvas.width, Math.random() * backgroundCanvas.height);
+
+    data.push({x: Math.random() * backgroundCanvas.width, y: Math.random() * backgroundCanvas.height, speed: Math.random() * 5});
+
+    // Update data positions
+    for (let i = 0; i < data.length; i++) {
+      data[i].x += data[i].speed;
+      if (data[i].x > backgroundCanvas.width) data[i].x = 0;
+      ctx.beginPath();
+      ctx.arc(data[i].x, data[i].y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(generateData);
+  }
+
+  generateData();
+
+  // 2. Set up Three.js for 3D Heart and Particle System
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Create 3D Love Heart Geometry (Here a simple torus knot as placeholder)
+  const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const heart = new THREE.Mesh(geometry, material);
+  scene.add(heart);
+
+  camera.position.z = 50;
+
+  // Animation Loop for 3D heart rotation
+  function animate() {
+    requestAnimationFrame(animate);
+    heart.rotation.x += 0.01;
+    heart.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  // 3. Particle Explosion Effect
+  let particles = [];
+  const particleMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 });
+  let particleSystem;
+
+  // Function to create particle explosion on click
+  function createParticleExplosion() {
+    const geometry = new THREE.Geometry();
+    for (let i = 0; i < 1000; i++) {
+      const particle = new THREE.Vector3(
+        Math.random() * 20 - 10,
+        Math.random() * 20 - 10,
+        Math.random() * 20 - 10
+      );
+      geometry.vertices.push(particle);
+    }
+
+    particleSystem = new THREE.Points(geometry, particleMaterial);
+    scene.add(particleSystem);
+
+    // Animate particles (they fly away)
+    function animateParticles() {
+      if (particleSystem) {
+        particleSystem.rotation.x += 0.02;
+        particleSystem.rotation.y += 0.02;
+      }
+      requestAnimationFrame(animateParticles);
+      renderer.render(scene, camera);
+    }
+    animateParticles();
+  }
+
+  // Mouse click event to trigger particle explosion
+  window.addEventListener('click', () => {
+    createParticleExplosion();
+  });
+
+  // 4. Create 3D Text to reassemble after particle explosion
+  const loader = new THREE.FontLoader();
+  loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+    const textGeometry = new THREE.TextGeometry('Love!', {
+      font: font,
+      size: 10,
+      height: 1,
+    });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    scene.add(textMesh);
+    textMesh.position.set(-30, 0, 0);
+  });
+</script>
+
+</body>
+</html>
